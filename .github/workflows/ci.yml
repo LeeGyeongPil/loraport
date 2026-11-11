@@ -1,0 +1,31 @@
+# Default tests need no network, GPU, torch or mlx: adapters are synthesized at test time.
+name: ci
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"   # weekly: catch breakage from new numpy/safetensors releases
+  workflow_dispatch:
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv python install
+      - run: uv sync --locked
+      - run: uv run pytest -q
+      - run: uv run loraport demo --out loraport-demo
+  peft:
+    # Optional: real PEFT merge check (downloads torch, takes a few minutes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv python install
+      - run: uv sync --locked --extra peft
+      - run: uv run pytest -q -m peft tests/test_peft_integration.py
