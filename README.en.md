@@ -23,7 +23,7 @@ git clone https://github.com/LeeGyeongPil/loraport && cd loraport
 uv run loraport --version
 ```
 ```text
-loraport 0.1.0
+loraport 0.1.1
 ```
 - Requires Python 3.11+ (`.python-version` pins 3.12). The only dependencies are `numpy` and `safetensors`, so it runs on macOS and Linux without torch or mlx.
 - On a minimal Linux image you only need `git` and `curl` in addition.
@@ -131,7 +131,7 @@ exit=1
 ### 5) Unsupported adapter types are refused
 A DoRA adapter (`fine_tune_type: dora`) is refused with a reason instead of being converted wrongly; nothing is written. Reproduce it with the `loraport-demo/dora` folder that `demo` creates.
 ```bash
-loraport convert loraport-demo/dora out/x --to peft; echo "exit=$?"
+uv run loraport convert loraport-demo/dora out/x --to peft; echo "exit=$?"
 ```
 ```text
 error: refusing to convert an unsupported adapter:
@@ -198,7 +198,7 @@ Format notes and sources: [docs/format-notes.md](docs/format-notes.md).
 - Other tools: for a merged full model use [mlx-lm `fuse`](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/LORA.md); to turn a PEFT adapter into a GGUF LoRA use [llama.cpp `convert_lora_to_gguf.py`](https://github.com/ggml-org/llama.cpp); to predict whether vLLM or llama.cpp will accept an adapter that is already in PEFT format, use lora-preflight (a separate tool, not published yet).
 
 ## Unsupported and limits
-- Refused in 0.1.0: DoRA, MoE (3-D tensors), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias adapters. Writing GGUF directly, merging into the base model and downloading from the hub (local folders only) are out of scope.
+- Refused in 0.1.1: DoRA, MoE (3-D tensors), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias adapters. Writing GGUF directly, merging into the base model and downloading from the hub (local folders only) are out of scope.
 - **Only dW equality is proven.** Attached to a quantized base model, outputs may differ slightly (output equality is not guaranteed).
 - **Loading in mlx-lm itself was not verified.** The format was checked against the installed mlx-lm 0.32.2 source and the header of a real mlx-lm adapter on the hub, but `load_adapters` from `mlx_lm` could not be run in the development environment (no Metal device). The behavior of `num_layers=-1` and of layers missing from the file staying at dW = 0 for `--to mlx` also rests on reading the source. On a normal Mac terminal you can run the round-trip test with `uv run --with mlx-lm pytest -m mlx`; that command has not been run yet.
 - The whole adapter is loaded into memory as float32 (no streaming). Adapters up to a few hundred MB are fine.
@@ -219,7 +219,7 @@ Format notes and sources: [docs/format-notes.md](docs/format-notes.md).
 uv run pytest -q
 ```
 ```text
-69 passed, 2 skipped in 1.76s
+70 passed, 2 skipped in 1.70s
 ```
 The two skipped tests are optional (real PEFT integration, Mac-only mlx integration). Run the PEFT one with `uv run --extra peft pytest -q -m peft tests/test_peft_integration.py` (the first run takes over a minute because of torch; `1 passed` in the development environment).
 

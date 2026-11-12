@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import math
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -74,6 +75,16 @@ def make_mlx_adapter(dst: Path, *, rank: int = 4, scale: float = 20.0, num_layer
     layers = list(range(total - num_layers, total))
     adapter = Adapter("mlx", rank, scale, random_modules(layers, rank, scale, seed))
     write_mlx(adapter, dst, total_layers=total)
+    return dst
+
+
+def make_dora_adapter(mlx_dir: Path, dst: Path) -> Path:
+    """Copy an MLX practice adapter and mark it ``fine_tune_type: dora`` (loraport refuses it)."""
+    shutil.copytree(mlx_dir, dst, dirs_exist_ok=True)
+    cfg_path = dst / CONFIG_NAME
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    cfg["fine_tune_type"] = "dora"
+    cfg_path.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
     return dst
 
 

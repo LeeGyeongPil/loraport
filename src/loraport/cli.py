@@ -18,7 +18,7 @@ from .delta import compare
 from .detect import load_adapter
 from .errors import LoraportError, UnsupportedAdapterError
 from .render import adapter_summary, render_inspect, render_report
-from .sample import TRAP_NAMES, make_mlx_adapter, make_trap, write_base_config
+from .sample import TRAP_NAMES, make_dora_adapter, make_mlx_adapter, make_trap, write_base_config
 
 
 def _cmd_inspect(args: argparse.Namespace) -> int:
@@ -98,6 +98,8 @@ def _cmd_demo(args: argparse.Namespace) -> int:
         caught += 0 if rep.ok else 1
         print(f"   {kind:<18} {'caught' if not rep.ok else 'MISSED'}: {rep.headline()}")
     print(f"{caught}/{len(TRAP_NAMES)} traps caught")
+    # extra folder for README section 5 (a DoRA adapter that convert must refuse); prints nothing
+    make_dora_adapter(mlx_dir, out / "dora")
     return 0 if to_peft.ok and back.ok and caught == len(TRAP_NAMES) else 1
 
 

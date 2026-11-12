@@ -22,6 +22,16 @@ def test_demo_runs_end_to_end(tmp_path: Path, capsys: pytest.CaptureFixture[str]
     assert "4/4 traps caught" in out and "MISSED" not in out
 
 
+def test_demo_creates_dora_folder_that_convert_refuses(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    demo = tmp_path / "demo"
+    assert main(["demo", "--out", str(demo)]) == 0
+    assert (demo / "dora").is_dir()
+    capsys.readouterr()
+    assert main(["convert", str(demo / "dora"), str(demo / "x"), "--to", "peft"]) == 2
+    assert "fine_tune_type='dora'" in capsys.readouterr().err
+    assert not (demo / "x").exists()
+
+
 def test_demo_via_subprocess(tmp_path: Path) -> None:
     proc = subprocess.run(
         [sys.executable, "-m", "loraport.cli", "demo", "--out", str(tmp_path / "d")],
