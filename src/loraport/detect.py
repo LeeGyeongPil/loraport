@@ -14,6 +14,8 @@ from .model import Adapter
 
 def detect_format(path: Path) -> str:
     """Return ``"mlx"`` or ``"peft"`` based on the weight file name in ``path``."""
+    if not path.exists():
+        raise AdapterFormatError(f"{path}: no such directory (check the path)")
     if not path.is_dir():
         raise AdapterFormatError(f"{path}: not a directory (pass the adapter folder, not a file)")
     has_mlx = (path / MLX_WEIGHTS).is_file()

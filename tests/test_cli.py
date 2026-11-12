@@ -87,3 +87,8 @@ def test_argparse_errors_exit_2() -> None:
     with pytest.raises(SystemExit) as e:
         main(["convert", "a", "b"])  # --to is required
     assert e.value.code == 2
+
+
+def test_missing_path_exit_2_no_such_directory(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["inspect", str(tmp_path / "missing")]) == 2
+    assert "no such directory" in capsys.readouterr().err

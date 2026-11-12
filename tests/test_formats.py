@@ -99,12 +99,24 @@ def test_unpaired_tensor_is_reported(mlx_dir: Path) -> None:
     assert any("lora_b" in s and "up_proj" in s for s in ad.key_issues)
 
 
-@pytest.mark.parametrize("empty", [True, False])
-def test_not_an_adapter_folder(tmp_path: Path, empty: bool) -> None:
+def test_empty_folder_is_not_an_adapter(tmp_path: Path) -> None:
     target = tmp_path / "nothing"
-    if empty:
-        target.mkdir()
-    with pytest.raises(AdapterFormatError, match="adapters.safetensors|not a directory"):
+    target.mkdir()
+    with pytest.raises(AdapterFormatError, match="no adapter found"):
+        load_adapter(target)
+
+
+def test_missing_path_says_no_such_directory(tmp_path: Path) -> None:
+    with pytest.raises(AdapterFormatError, match="no such directory") as exc:
+        load_adapter(tmp_path / "nothing")
+    assert "not a directory" not in str(exc.value)
+    assert "not a file" not in str(exc.value)
+
+
+def test_file_path_keeps_not_a_directory_message(tmp_path: Path) -> None:
+    target = tmp_path / "file.txt"
+    target.write_text("x")
+    with pytest.raises(AdapterFormatError, match="not a directory"):
         load_adapter(target)
 
 
