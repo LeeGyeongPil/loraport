@@ -1,6 +1,6 @@
 [project]
 name = "loraport"
-version = "0.1.1"
+version = "0.1.2"
 description = "Convert LoRA adapters between MLX (mlx-lm) and PEFT formats and prove the weight delta (dW) survived the trip."
 readme = "README.md"
 license = { text = "MIT" }

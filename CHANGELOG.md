@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-13
+
+### Fixed
+- A path that does not exist now reports `no such directory (check the path)` instead of the misleading `not a directory (pass the adapter folder, not a file)`. Exit code 2 and the exception type are unchanged.
+
 ## [0.1.1] - 2026-11-13
 
 ### Fixed
