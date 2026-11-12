@@ -25,7 +25,7 @@ git clone https://github.com/LeeGyeongPil/loraport && cd loraport
 uv run loraport --version
 ```
 ```text
-loraport 0.1.1
+loraport 0.1.2
 ```
 - 필요한 것: Python 3.11 이상(`.python-version` 은 3.12). 의존성은 `numpy`·`safetensors` 뿐이라 torch·mlx 없이 맥·리눅스 어디서나 돕니다.
 - 최소 리눅스 환경에서는 `git`, `curl` 정도만 더 있으면 됩니다.
@@ -201,7 +201,7 @@ flowchart LR
 - 이럴 땐 다른 도구: 기본 모델에 병합한 전체 모델이 필요하면 [mlx-lm `fuse`](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/LORA.md), PEFT 어댑터를 GGUF LoRA 로 바꾸려면 [llama.cpp `convert_lora_to_gguf.py`](https://github.com/ggml-org/llama.cpp), 이미 PEFT 형식인 어댑터를 vLLM·llama.cpp 가 받아 줄지 미리 따지려면 lora-preflight.
 
 ## 지원 안 하는 것과 한계
-- 0.1.1 에서 거부하는 형태: DoRA, MoE(3차원 텐서), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias 어댑터. GGUF 직접 쓰기, 기본 모델 병합, 허브 다운로드(로컬 폴더만)도 범위 밖입니다.
+- 0.1.2 에서 거부하는 형태: DoRA, MoE(3차원 텐서), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias 어댑터. GGUF 직접 쓰기, 기본 모델 병합, 허브 다운로드(로컬 폴더만)도 범위 밖입니다.
 - **ΔW 동일성만 증명합니다.** 양자화한 기본 모델에 붙이면 출력은 조금 달라질 수 있습니다(출력 동일성은 보장하지 않음).
 - **mlx-lm 쪽은 실제 로드를 확인하지 못했습니다.** 형식은 mlx-lm 0.32.2 설치본 소스와 허브의 실제 mlx-lm 어댑터 헤더로 확인했고, 개발 환경(Metal 장치 없음)에서 `mlx_lm` 의 `load_adapters` 를 직접 돌려 보지는 못했습니다. `--to mlx` 의 `num_layers=-1`·파일에 없는 층이 ΔW=0 으로 남는다는 동작도 소스를 읽은 근거입니다. 맥의 일반 터미널에서는 `uv run --with mlx-lm pytest -m mlx` 로 왕복 테스트를 돌려 볼 수 있는데, 이 명령은 아직 실행해 보지 않았습니다.
 - 어댑터 전체를 float32 로 메모리에 올립니다(스트리밍 아님). 수백 MB 급까지는 가능합니다.
@@ -211,6 +211,7 @@ flowchart LR
 | 증상 | 원인 | 해결 |
 |---|---|---|
 | `error: ... already contains adapter files; pass --force` (종료 코드 2) | 대상 폴더에 이미 어댑터 파일이 있음 | 다른 폴더를 쓰거나 `--force` |
+| `error: ...: no such directory` (종료 코드 2) | 경로 오타 | 어댑터 폴더 경로를 확인 |
 | `refusing to convert an unsupported adapter` (종료 코드 2) | DoRA·MoE 등 지원 안 하는 형태 | 이유 목록을 확인하고 LoRA 어댑터로 다시 학습·저장 |
 | `verify` 가 `shape mismatch` 로 FAIL | A/B 를 전치하지 않은 어댑터 | `convert` 로 다시 변환 |
 | `verify` 가 `ignored or dropped tensors` 로 FAIL | PEFT 키에 `base_model.model.` 접두사가 없음 | `convert` 로 다시 변환 |
@@ -222,7 +223,7 @@ flowchart LR
 uv run pytest -q
 ```
 ```text
-70 passed, 2 skipped in 1.70s
+72 passed, 2 skipped in 1.70s
 ```
 건너뛴 2개는 선택 테스트(실제 PEFT 통합, 맥 전용 mlx 통합)입니다. PEFT 통합은 `uv run --extra peft pytest -q -m peft tests/test_peft_integration.py` 로 돌립니다(torch 설치 때문에 첫 실행은 1분 넘게 걸림. 개발 환경에서 `1 passed`).
 
