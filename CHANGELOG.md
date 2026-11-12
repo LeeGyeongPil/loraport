@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-13
+
+### Fixed
+- `convert --to peft` no longer suggests an unpublished tool in its next steps; README example output now matches the real output.
+
 ## [0.1.2] - 2026-11-13
 
 ### Fixed

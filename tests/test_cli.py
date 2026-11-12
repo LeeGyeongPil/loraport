@@ -63,7 +63,7 @@ def test_convert_autoverify_and_next_steps(mlx_dir: Path, tmp_path: Path, capsys
     out = capsys.readouterr().out
     assert "PASS 14/14 modules" in out
     assert "--lora-modules" in out and "vllm serve org/model --enable-lora" in out
-    assert "convert_lora_to_gguf.py" in out and "lora-preflight" in out
+    assert "convert_lora_to_gguf.py" in out and "lora-preflight" not in out
 
 
 def test_convert_failure_exit_code(mlx_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

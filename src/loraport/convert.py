@@ -65,7 +65,6 @@ def _next_steps(to: Target, dst: Path, base: str | None, num_layers_unknown: boo
         return [
             f"vLLM:      vllm serve {base_ref} --enable-lora --lora-modules my-adapter={dst}",
             f"llama.cpp: python convert_lora_to_gguf.py --base <BASE_MODEL_DIR> --outfile adapter.gguf {dst}",
-            "Check the target runtime accepts the adapter (rank limits, supported modules) with lora-preflight.",
         ]
     steps = [f'mlx-lm:    mlx_lm.generate --model {base_ref} --adapter-path {dst} --prompt "Hello"']
     if num_layers_unknown:

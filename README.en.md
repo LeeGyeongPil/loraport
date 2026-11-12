@@ -23,7 +23,7 @@ git clone https://github.com/LeeGyeongPil/loraport && cd loraport
 uv run loraport --version
 ```
 ```text
-loraport 0.1.2
+loraport 0.1.3
 ```
 - Requires Python 3.11+ (`.python-version` pins 3.12). The only dependencies are `numpy` and `safetensors`, so it runs on macOS and Linux without torch or mlx.
 - On a minimal Linux image you only need `git` and `curl` in addition.
@@ -87,7 +87,6 @@ PASS 14/14 modules, worst rel err 0.0e+00   [source vs converted, rtol 1e-05]
 next steps:
   vLLM:      vllm serve Qwen/Qwen2.5-1.5B-Instruct --enable-lora --lora-modules my-adapter=loraport-demo/out/peft
   llama.cpp: python convert_lora_to_gguf.py --base <BASE_MODEL_DIR> --outfile adapter.gguf loraport-demo/out/peft
-  Check the target runtime accepts the adapter (rank limits, supported modules) with lora-preflight.
 ```
 ![convert screen](docs/images/03-convert.png)
 *After converting, the automatic verification result and the next vLLM / llama.cpp commands are shown.*
@@ -195,10 +194,10 @@ Format notes and sources: [docs/format-notes.md](docs/format-notes.md).
 
 ## When to use it
 - Good fit: you want to hand an mlx-lm adapter to PEFT-based tools without merging it, and keep a numeric record that the conversion matches the original.
-- Other tools: for a merged full model use [mlx-lm `fuse`](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/LORA.md); to turn a PEFT adapter into a GGUF LoRA use [llama.cpp `convert_lora_to_gguf.py`](https://github.com/ggml-org/llama.cpp); to predict whether vLLM or llama.cpp will accept an adapter that is already in PEFT format, use lora-preflight (a separate tool, not published yet).
+- Other tools: for a merged full model use [mlx-lm `fuse`](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/LORA.md); to turn a PEFT adapter into a GGUF LoRA use [llama.cpp `convert_lora_to_gguf.py`](https://github.com/ggml-org/llama.cpp).
 
 ## Unsupported and limits
-- Refused in 0.1.2: DoRA, MoE (3-D tensors), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias adapters. Writing GGUF directly, merging into the base model and downloading from the hub (local folders only) are out of scope.
+- Refused in 0.1.3: DoRA, MoE (3-D tensors), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias adapters. Writing GGUF directly, merging into the base model and downloading from the hub (local folders only) are out of scope.
 - **Only dW equality is proven.** Attached to a quantized base model, outputs may differ slightly (output equality is not guaranteed).
 - **Loading in mlx-lm itself was not verified.** The format was checked against the installed mlx-lm 0.32.2 source and the header of a real mlx-lm adapter on the hub, but `load_adapters` from `mlx_lm` could not be run in the development environment (no Metal device). The behavior of `num_layers=-1` and of layers missing from the file staying at dW = 0 for `--to mlx` also rests on reading the source. On a normal Mac terminal you can run the round-trip test with `uv run --with mlx-lm pytest -m mlx`; that command has not been run yet.
 - The whole adapter is loaded into memory as float32 (no streaming). Adapters up to a few hundred MB are fine.

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 from .convert import ConvertResult, convert  # noqa: E402
 from .delta import Report, compare  # noqa: E402

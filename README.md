@@ -25,7 +25,7 @@ git clone https://github.com/LeeGyeongPil/loraport && cd loraport
 uv run loraport --version
 ```
 ```text
-loraport 0.1.2
+loraport 0.1.3
 ```
 - 필요한 것: Python 3.11 이상(`.python-version` 은 3.12). 의존성은 `numpy`·`safetensors` 뿐이라 torch·mlx 없이 맥·리눅스 어디서나 돕니다.
 - 최소 리눅스 환경에서는 `git`, `curl` 정도만 더 있으면 됩니다.
@@ -89,7 +89,6 @@ PASS 14/14 modules, worst rel err 0.0e+00   [source vs converted, rtol 1e-05]
 next steps:
   vLLM:      vllm serve Qwen/Qwen2.5-1.5B-Instruct --enable-lora --lora-modules my-adapter=loraport-demo/out/peft
   llama.cpp: python convert_lora_to_gguf.py --base <BASE_MODEL_DIR> --outfile adapter.gguf loraport-demo/out/peft
-  Check the target runtime accepts the adapter (rank limits, supported modules) with lora-preflight.
 ```
 ![convert 화면](docs/images/03-convert.png)
 *변환이 끝나면 자동 검증 결과와 vLLM·llama.cpp 다음 명령이 나온다.*
@@ -97,7 +96,6 @@ next steps:
 - 변환 결과는 `adapter_model.safetensors`(메타데이터 `format=pt`)와 `adapter_config.json` 입니다. 설정에는 필요한 필드만 쓰고 학습 인자(데이터 경로 등)는 복사하지 않습니다.
 - 반대 방향은 `--to mlx`. `--base-config` 가 있으면 `num_layers` 를 `전체 층 수 − 가장 앞 층 번호` 로 계산하고, 없으면 `-1`(모든 블록)로 씁니다.
 - `--base-model-id` 를 주지 않으면 `base_model_name_or_path` 는 `null` 입니다.
-- 마지막 줄의 `lora-preflight` 는 별도 도구이며 아직 공개 전입니다.
 - `llama.cpp` 줄의 `<BASE_MODEL_DIR>` 는 직접 채우는 자리표시입니다. llama.cpp·vLLM 명령 자체는 이 도구가 실행하지 않고 안내만 합니다.
 
 ### 3) 두 어댑터 비교하기(CI)
@@ -198,10 +196,10 @@ flowchart LR
 
 ## 언제 쓰나
 - 이럴 때: mlx-lm 어댑터를 병합하지 않고 그대로 PEFT 계열 도구에 넘기고 싶을 때, 변환 결과가 원본과 같은지 숫자로 남기고 싶을 때.
-- 이럴 땐 다른 도구: 기본 모델에 병합한 전체 모델이 필요하면 [mlx-lm `fuse`](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/LORA.md), PEFT 어댑터를 GGUF LoRA 로 바꾸려면 [llama.cpp `convert_lora_to_gguf.py`](https://github.com/ggml-org/llama.cpp), 이미 PEFT 형식인 어댑터를 vLLM·llama.cpp 가 받아 줄지 미리 따지려면 lora-preflight.
+- 이럴 땐 다른 도구: 기본 모델에 병합한 전체 모델이 필요하면 [mlx-lm `fuse`](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/LORA.md), PEFT 어댑터를 GGUF LoRA 로 바꾸려면 [llama.cpp `convert_lora_to_gguf.py`](https://github.com/ggml-org/llama.cpp).
 
 ## 지원 안 하는 것과 한계
-- 0.1.2 에서 거부하는 형태: DoRA, MoE(3차원 텐서), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias 어댑터. GGUF 직접 쓰기, 기본 모델 병합, 허브 다운로드(로컬 폴더만)도 범위 밖입니다.
+- 0.1.3 에서 거부하는 형태: DoRA, MoE(3차원 텐서), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias 어댑터. GGUF 직접 쓰기, 기본 모델 병합, 허브 다운로드(로컬 폴더만)도 범위 밖입니다.
 - **ΔW 동일성만 증명합니다.** 양자화한 기본 모델에 붙이면 출력은 조금 달라질 수 있습니다(출력 동일성은 보장하지 않음).
 - **mlx-lm 쪽은 실제 로드를 확인하지 못했습니다.** 형식은 mlx-lm 0.32.2 설치본 소스와 허브의 실제 mlx-lm 어댑터 헤더로 확인했고, 개발 환경(Metal 장치 없음)에서 `mlx_lm` 의 `load_adapters` 를 직접 돌려 보지는 못했습니다. `--to mlx` 의 `num_layers=-1`·파일에 없는 층이 ΔW=0 으로 남는다는 동작도 소스를 읽은 근거입니다. 맥의 일반 터미널에서는 `uv run --with mlx-lm pytest -m mlx` 로 왕복 테스트를 돌려 볼 수 있는데, 이 명령은 아직 실행해 보지 않았습니다.
 - 어댑터 전체를 float32 로 메모리에 올립니다(스트리밍 아님). 수백 MB 급까지는 가능합니다.
