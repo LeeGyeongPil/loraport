@@ -23,7 +23,7 @@ git clone https://github.com/LeeGyeongPil/loraport && cd loraport
 uv run loraport --version
 ```
 ```text
-loraport 0.1.3
+loraport 0.1.4
 ```
 - Requires Python 3.11+ (`.python-version` pins 3.12). The only dependencies are `numpy` and `safetensors`, so it runs on macOS and Linux without torch or mlx.
 - On a minimal Linux image you only need `git` and `curl` in addition.
@@ -56,7 +56,7 @@ How to read it: lines 2 and 3 mean the dW of every module is unchanged after con
 | `verify <A> <B> [--rtol 1e-5] [--json]` | compare dW of two adapters (any format) per module | `loraport verify adapters out/peft` |
 | `demo [--out dir]` | run the whole flow on synthetic practice adapters | `loraport demo` |
 
-`convert` options: `--base-config` (the base model's `config.json` or its folder; checks module sizes and layer range), `--base-model-id` (hub name written to `base_model_name_or_path`), `--rtol` (allowed relative error, default 1e-5), `--no-verify`, `--force` (overwrite adapter files already in the destination).
+`convert` options: `--base-config` (the base model's `config.json` or its folder; checks module sizes and layer range), `--base-model-id` (hub name written to `base_model_name_or_path`), `--rtol` (allowed relative error, default 1e-5; must be a finite number >= 0, so `inf`, `nan` and negatives exit with code 2), `--no-verify`, `--force` (overwrite adapter files already in the destination).
 
 Exit codes: **0** pass / **1** mismatch (verification failed) / **2** input error, unsupported adapter type, or destination already exists.
 
@@ -151,7 +151,7 @@ print(result.report.ok, result.report.worst_rel_err)   # True 0.0
 report = compare(load_adapter("adapters"), load_adapter("out/peft"))
 print(report.ok, len(report.per_module))               # True 14 (for the demo adapter)
 ```
-Public API: `load_adapter`, `convert`, `compare`, `save_peft`, `save_mlx`. Exceptions: `LoraportError` (subclasses `AdapterFormatError`, `UnsupportedAdapterError`).
+Public API: `load_adapter`, `convert`, `compare`, `save_peft`, `save_mlx`. Exceptions: `LoraportError` (subclasses `AdapterFormatError`, `UnsupportedAdapterError`); an invalid `rtol` raises `ValueError`.
 
 ## Configuration
 There are no config files, environment variables or API keys. Everything is set with command options. `--rtol` defaults to 1e-5. Input may be F32, F16 or BF16 safetensors; output is always float32.
@@ -197,7 +197,7 @@ Format notes and sources: [docs/format-notes.md](docs/format-notes.md).
 - Other tools: for a merged full model use [mlx-lm `fuse`](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/LORA.md); to turn a PEFT adapter into a GGUF LoRA use [llama.cpp `convert_lora_to_gguf.py`](https://github.com/ggml-org/llama.cpp).
 
 ## Unsupported and limits
-- Refused in 0.1.3: DoRA, MoE (3-D tensors), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias adapters. Writing GGUF directly, merging into the base model and downloading from the hub (local folders only) are out of scope.
+- Refused in 0.1.4: DoRA, MoE (3-D tensors), embedding LoRA, `modules_to_save`, `rank_pattern`/`alpha_pattern`, bias adapters. Writing GGUF directly, merging into the base model and downloading from the hub (local folders only) are out of scope.
 - **Only dW equality is proven.** Attached to a quantized base model, outputs may differ slightly (output equality is not guaranteed).
 - **Loading in mlx-lm itself was not verified.** The format was checked against the installed mlx-lm 0.32.2 source and the header of a real mlx-lm adapter on the hub, but `load_adapters` from `mlx_lm` could not be run in the development environment (no Metal device). The behavior of `num_layers=-1` and of layers missing from the file staying at dW = 0 for `--to mlx` also rests on reading the source. On a normal Mac terminal you can run the round-trip test with `uv run --with mlx-lm pytest -m mlx`; that command has not been run yet.
 - The whole adapter is loaded into memory as float32 (no streaming). Adapters up to a few hundred MB are fine.
