@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-11-20
+
+### Fixed
+- `--rtol` (`verify`, `convert`) and `compare(rtol=...)` now reject `inf`, `nan` and negative values (exit code 2 / `ValueError`) instead of silently passing or failing every check. To skip verification use `convert --no-verify`.
+
 ## [0.1.3] - 2026-11-13
 
 ### Fixed
