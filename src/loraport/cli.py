@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -19,6 +20,19 @@ from .detect import load_adapter
 from .errors import LoraportError, UnsupportedAdapterError
 from .render import adapter_summary, render_inspect, render_report
 from .sample import TRAP_NAMES, make_dora_adapter, make_mlx_adapter, make_trap, write_base_config
+
+
+def _rtol(text: str) -> float:
+    """argparse type for --rtol: a finite number >= 0."""
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"--rtol must be a number, got {text!r}") from None
+    if not math.isfinite(value) or value < 0:
+        raise argparse.ArgumentTypeError(
+            f"--rtol must be a finite number >= 0, got {text!r} (use convert --no-verify to skip verification)"
+        )
+    return value
 
 
 def _cmd_inspect(args: argparse.Namespace) -> int:
@@ -122,7 +136,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--to", choices=("peft", "mlx"), required=True)
     sp.add_argument("--base-config", type=Path, help="base model config.json (or its folder) for shape/layer checks")
     sp.add_argument("--base-model-id", help="hub id written into the output config (e.g. Qwen/Qwen2.5-1.5B-Instruct)")
-    sp.add_argument("--rtol", type=float, default=1e-5, help="max relative dW error (default 1e-5)")
+    sp.add_argument("--rtol", type=_rtol, default=1e-5, help="max relative dW error (default 1e-5)")
     sp.add_argument("--no-verify", action="store_true", help="skip the automatic verification")
     sp.add_argument("--force", action="store_true", help="overwrite adapter files in dst")
     sp.set_defaults(func=_cmd_convert)
@@ -130,7 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("verify", help="compare the dW of two adapters (any formats)")
     sp.add_argument("a", type=Path, help="reference adapter")
     sp.add_argument("b", type=Path, help="adapter to check")
-    sp.add_argument("--rtol", type=float, default=1e-5)
+    sp.add_argument("--rtol", type=_rtol, default=1e-5)
     sp.add_argument("--json", action="store_true")
     sp.set_defaults(func=_cmd_verify)
 

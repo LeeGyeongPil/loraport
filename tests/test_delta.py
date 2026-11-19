@@ -60,3 +60,12 @@ def test_zero_reference_module() -> None:
 
 def test_empty_reference_never_passes() -> None:
     assert not compare(Adapter("mlx", 4, 1.0, {}), Adapter("peft", 4, 1.0, {})).ok
+
+
+def test_compare_rejects_bad_rtol() -> None:
+    import pytest
+
+    ad = Adapter(format="peft", rank=1, scale=1.0, modules={})
+    for bad in (float("inf"), float("nan"), -1.0):
+        with pytest.raises(ValueError, match="rtol"):
+            compare(ad, ad, rtol=bad)

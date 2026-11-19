@@ -92,3 +92,23 @@ def test_argparse_errors_exit_2() -> None:
 def test_missing_path_exit_2_no_such_directory(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["inspect", str(tmp_path / "missing")]) == 2
     assert "no such directory" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("bad", ["inf", "nan", "-1"])
+@pytest.mark.parametrize("cmd", ["verify", "convert"])
+def test_bad_rtol_rejected(tmp_path: Path, capsys: pytest.CaptureFixture[str], cmd: str, bad: str) -> None:
+    """--rtol inf/nan/negative exits 2 with a --rtol message."""
+    a = make_peft_adapter(tmp_path / "a")
+    args = [cmd, str(a), str(tmp_path / "b")]
+    if cmd == "convert":
+        args += ["--to", "mlx"]
+    with pytest.raises(SystemExit) as exc:
+        main([*args, "--rtol", bad])
+    assert exc.value.code == 2
+    assert "--rtol" in capsys.readouterr().err
+
+
+def test_rtol_zero_still_accepted(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    a = make_peft_adapter(tmp_path / "a")
+    assert main(["verify", str(a), str(a), "--rtol", "0"]) == 0
+    capsys.readouterr()

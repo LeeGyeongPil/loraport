@@ -102,7 +102,11 @@ def compare(a: Adapter, b: Adapter, *, rtol: float = 1e-5) -> Report:
     The report is ``ok`` only if no module is missing/extra, no shape differs,
     no tensor was ignored or dropped on either side, and every relative error
     ``||dW_a - dW_b|| / ||dW_a||`` is within ``rtol``.
+
+    Raises ``ValueError`` if ``rtol`` is not a finite number >= 0.
     """
+    if not (math.isfinite(rtol) and rtol >= 0):
+        raise ValueError(f"rtol must be a finite number >= 0, got {rtol!r}")
     missing = sorted(a.modules.keys() - b.modules.keys())
     extra = sorted(b.modules.keys() - a.modules.keys())
     shape_mismatch: list[str] = []
